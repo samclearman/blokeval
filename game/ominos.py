@@ -1,4 +1,5 @@
 from collections import namedtuple
+from functools import lru_cache
 from math import ceil
 
 Position = namedtuple('Position', ['i', 'j'])
@@ -74,10 +75,16 @@ OMINOS = [
 ]
 
 TOTAL_OMINOS = len(OMINOS)
+TOTAL_TILES = sum(sum(sum(OMINOS, []), []))
+
+def get_omino_score(idx):
+    score = 0
+    for r in get_omino(idx):
+        score += sum(r)
+    return score
 
 def get_omino(idx):
     return OMINOS[idx - 1]
-
 
 def padded(omino):
     height = len(omino)
@@ -131,8 +138,9 @@ def transformed(omino, transformation):
         omino = flipped(omino)
     return omino
 
-
-def get_omino_positions(omino, transformation, x, y):
+@lru_cache(None)
+def get_omino_positions(omino_idx, transformation, x, y):
+    omino = get_omino(omino_idx)
     t = transformed(omino, transformation)
     positions = []
     offset = OMINO_SIZE // 2

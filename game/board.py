@@ -2,7 +2,7 @@ from random import random
 
 from recordtype import recordtype
 
-from .ominos import TOTAL_OMINOS, get_omino, get_omino_positions, Transformation
+from .ominos import TOTAL_OMINOS, TOTAL_TILES, Transformation, get_omino_positions, get_omino_score
 
 PLAYERS = 4
 WIDTH = 20
@@ -54,8 +54,7 @@ def shares_vertex_with(cells, positions, player):
 
 
 def validate_place(b, player, omino_idx, transformation, x, y):
-    omino = get_omino(omino_idx)
-    positions = get_omino_positions(omino, transformation, x, y)
+    positions = get_omino_positions(omino_idx, transformation, x, y)
     if not in_bounds(b.cells, positions):
         return False
     if not vacant(b.cells, positions):
@@ -97,6 +96,12 @@ def get_next_player(b, player):
     return player
 
 
+def score(b, player):
+    score = TOTAL_TILES
+    for omino_idx in b.ominos_remaining[player]:
+        score -= get_omino_score(omino_idx)
+    return score
+        
 class Board:
     def __init__(self, cols = WIDTH, rows = HEIGHT, players = PLAYERS):
         self.cells = []
@@ -135,8 +140,7 @@ class Board:
         assert validate_place(self, player, omino_idx, transformation, x, y)
         assert omino_idx in self.ominos_remaining[player]
         
-        omino = get_omino(omino_idx)
-        positions = get_omino_positions(omino, transformation, x, y)
+        positions = get_omino_positions(omino_idx, transformation, x, y)
         for i, j in positions:
             self.cells[(i * WIDTH) + j].val = player
         self.ominos_remaining[player].remove(omino_idx)

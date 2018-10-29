@@ -1,4 +1,4 @@
-from game.board import Board, random_move
+from game.board import Board, random_move, score
 from game.ominos import Transformation
 
 b = Board()
@@ -10,3 +10,6 @@ while not b.game_over:
     print(b)
 
 print(b)
+print('Game over!  Scores:')
+for player in range(1, 5):
+    print('{}: {}'.format(player, score(b, player)))
