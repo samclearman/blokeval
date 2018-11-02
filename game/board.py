@@ -77,8 +77,10 @@ def valid_moves(b, player):
                         if validate_place(b, player, omino_idx, transformation, x, y):
                             yield (omino_idx, transformation, x, y)
 
+
 def has_valid_move(b, player):
     return any(valid_moves(b, player))
+
 
 def random_move(b, player):
     choice = None
@@ -101,7 +103,8 @@ def score(b, player):
     for omino_idx in b.ominos_remaining[player]:
         score -= get_omino_score(omino_idx)
     return score
-        
+
+
 class Board:
     def __init__(self, cols = WIDTH, rows = HEIGHT, players = PLAYERS):
         self.cells = []
