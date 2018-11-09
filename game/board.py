@@ -1,4 +1,4 @@
-from random import random
+from random import random, shuffle
 
 from recordtype import recordtype
 
@@ -66,23 +66,42 @@ def validate_place(b, player, omino_idx, transformation, x, y):
     return True
 
 
-def valid_moves(b, player):
-    ominos_remaining = b.ominos_remaining[player]
-    for omino_idx in ominos_remaining:
-        for x in range(WIDTH):
-            for y in range(HEIGHT):
-                for rotations in range(4):
-                    for flips in range(2):
+def valid_moves(b, player, randomize = True):
+    ominos = list(b.ominos_remaining[player])
+    columns = list(range(WIDTH))
+    rows = list(range(HEIGHT))
+    r = list(range(4))
+    f = list(range(2))
+    if randomize:
+        for l in (ominos, columns, rows, r, f):
+            shuffle(l)
+    for omino_idx in ominos:
+        for x in columns:
+            for y in rows:
+                for rotations in r:
+                    for flips in f:
                         transformation = Transformation(rotations, flips)
                         if validate_place(b, player, omino_idx, transformation, x, y):
                             yield (omino_idx, transformation, x, y)
 
 
 def has_valid_move(b, player):
-    return any(valid_moves(b, player))
+    # hack for performance
+    for move in valid_moves(b, player, True):
+        b._next_move = move
+        return move
+    # return any(valid_moves(b, player, true))
 
 
 def random_move(b, player):
+    # hack for performance (see corresponding hack in has_valid_move)
+    if b._next_move:
+        return b._next_move
+    for move in valid_moves(b, player):
+        return move
+
+
+def uniformly_random_move(b, player):
     choice = None
     for i, move in enumerate(valid_moves(b, player)):
         if random() < (1 / (i + 1)):
@@ -95,7 +114,7 @@ def get_next_player(b, player):
         next_player = (player + i) % PLAYERS + 1
         if has_valid_move(b, next_player):
             return next_player
-    return player
+    return None
 
 
 def score(b, player):
@@ -103,7 +122,6 @@ def score(b, player):
     for omino_idx in b.ominos_remaining[player]:
         score -= get_omino_score(omino_idx)
     return score
-
 
 class Board:
     def __init__(self, cols = WIDTH, rows = HEIGHT, players = PLAYERS):
@@ -119,6 +137,9 @@ class Board:
         }
 
         self.next_player = 1
+        
+        #hack, see has_valid_move and random_move
+        self._next_move = None
 
         self.alive = {
             1: True,
@@ -149,6 +170,6 @@ class Board:
         self.ominos_remaining[player].remove(omino_idx)
         
         self.next_player = get_next_player(self, player)
-        if self.next_player == player:
+        if not self.next_player:
             self.game_over = True
         

@@ -1,15 +1,9 @@
-from game.board import Board, random_move, score
-from game.ominos import Transformation
+from game.game import random_game
 
-b = Board()
+g = random_game()
 
-while not b.game_over:
-    player = b.next_player
-    omino_idx, transformation, x, y = random_move(b, player)
-    b.place(player, omino_idx, transformation, x, y)
-    print(b)
-
-print(b)
-print('Game over!  Scores:')
-for player in range(1, 5):
-    print('{}: {}'.format(player, score(b, player)))
+print('Game over!')
+print(g)
+print('History')
+for blob in g.blobs:
+    print(blob)
