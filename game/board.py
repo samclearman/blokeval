@@ -172,4 +172,14 @@ class Board:
         self.next_player = get_next_player(self, player)
         if not self.next_player:
             self.game_over = True
-        
+
+def place_cells(cells, player, omino_idx, transformation, x, y):
+    positions = get_omino_positions(omino_idx, transformation, x, y)
+    for i, j in positions:
+        cells[(i * WIDTH) + j].val = player
+
+def unplace_cells(cells, player, omino_idx, transformation, x, y):
+    positions = get_omino_positions(omino_idx, transformation, x, y)
+    for i, j in positions:
+        cells[(i * WIDTH) + j].val = 0
+

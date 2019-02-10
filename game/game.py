@@ -11,6 +11,9 @@ HEIGHT = 20
 def cell_values(b):
     return [c.val for c in b.cells]
 
+def flat_mask(cells):
+    return sum(masks([c.val for c in cells]), [])
+    
 def masks(snapshot):
     m = []
     for p in range(PLAYERS):
@@ -34,6 +37,16 @@ def random_game():
         player = b.next_player
         omino_idx, transformation, x, y = random_move(b, player)
         g.play_move((player, omino_idx, transformation, x, y))
+    return g
+
+def play_game(p1, p2, p3, p4):
+    players = (None, p1, p2, p3, p4)
+    g = Game()
+    while not g.game_over:
+        b = g.board
+        player = players[b.next_player]
+        move = player.next_move(g)
+        g.play_move(move)
     return g
 
 class Game:
@@ -87,8 +100,8 @@ class Game:
 
     @property
     def winners(self):
-        m = max(self._scores)
-        return [int(s == m) for s in self._scores]
+        m = max(self.scores)
+        return [int(s == m) for s in self.scores]
 
     @property
     def turns(self):
