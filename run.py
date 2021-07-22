@@ -1,8 +1,12 @@
+from time import time
+
 from tqdm import tqdm
 import numpy as np
 from keras.models import Model
 from keras import layers
 from keras.layers import Input, Reshape, Conv2D, Activation, Flatten, Dense
+from keras.callbacks import TensorBoard
+
 # import keras.backend as K
 # from tensorflow.python import debug as tf_debug
 
@@ -12,19 +16,6 @@ from player import Player, keras_evaluator
 # sess = K.get_session()
 # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
 # K.set_session(sess)
-
-# Build the model
-# model = Sequential()
-# model.add(Dense(units=64, activation='relu', input_dim=(PLAYERS * WIDTH * HEIGHT)))
-# model.add(Dense(units=32, activation='relu'))
-# model.add(Dense(units=16, activation='relu'))
-# model.add(Dense(units=8, activation='relu'))
-# Prediction layer
-# model.add(Dense(units=PLAYERS, activation='softmax'))
-
-# model.compile(optimizer='sgd',
-#               loss='categorical_crossentropy',
-#               metrics=['accuracy'])
 
 # Resnet ish
 pipe = []
@@ -82,11 +73,14 @@ model.compile(optimizer='sgd',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
+
 # Train the model
+
+# Genrate training data
 print('Generating games...')
 masks = []
 results = []
-for _ in tqdm(range(10)):
+for _ in tqdm(range(1000)):
     game = random_game()
     masks += game.masks
     results += [game.winners] * game.turns
@@ -94,8 +88,12 @@ X = np.array(masks)
 Y = np.array(results)
 print(Y.shape)
 
+# Balance classes
+#
+
 print('Training model...')
-model.fit(x=X, y=Y, epochs=50, validation_split=0.1)
+tensorboard = TensorBoard(log_dir='logs/{}'.format(time()))
+model.fit(x=X, y=Y, epochs=3, validation_split=0.1, callbacks=[tensorboard])
 
 # Evaluate the model
 players = [Player(i, keras_evaluator(model, i)) for i in [1,2,3,4]]
@@ -112,3 +110,5 @@ random_x = np.array(game.masks)
 random_y = np.array([game.winners] * game.turns)
 print(model.metrics_names)
 print(model.test_on_batch(random_x, random_y))
+
+model.save('trained_model')
