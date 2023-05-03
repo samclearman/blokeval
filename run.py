@@ -1,7 +1,9 @@
 from time import time
 
 from tqdm import tqdm
+
 import numpy as np
+import tensorflow as tf
 from keras.models import Model
 from keras import layers
 from keras.layers import Input, Reshape, Conv2D, Activation, Flatten, Dense
@@ -16,6 +18,12 @@ from player import Player, keras_evaluator
 # sess = K.get_session()
 # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
 # K.set_session(sess)
+LOG_DIR = 'logs/{}'.format(time())
+tf.summary.trace_on(graph=True, profiler=True)
+tf.debugging.experimental.enable_dump_debug_info(
+    LOG_DIR,
+    tensor_debug_mode="FULL_HEALTH",
+    circular_buffer_size=-1)
 
 # Resnet ish
 pipe = []
@@ -72,30 +80,46 @@ print(model.summary())
 model.compile(optimizer='sgd',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
-
+model.summary()
+# from keras.utils.vis_utils import plot_model
+# plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 
 # Train the model
 
 # Genrate training data
-print('Generating games...')
-masks = []
-results = []
-for _ in tqdm(range(1000)):
-    game = random_game()
-    masks += game.masks
-    results += [game.winners] * game.turns
-X = np.array(masks)
-Y = np.array(results)
+try:
+    print('Loading games...')
+    fx = open('X.npy', 'rb')
+    fy = open('Y.npy', 'rb')
+    X = np.load(fx)
+    Y = np.load(fy)
+except:
+    print('No games found.  Generating random games...')
+    masks = []
+    results = []
+    for _ in tqdm(range(1000)):
+        game = random_game()
+        masks += game.masks
+        results += [game.winners] * game.turns
+    X = np.array(masks)
+    with open('X.npy', 'wb') as fx:
+        np.save('X.npy', X)
+    Y = np.array(results)
+    with open('Y.npy', 'wb') as fy:
+        np.save('Y.npy', Y)
 print(Y.shape)
 
 # Balance classes
 #
 
 print('Training model...')
-tensorboard = TensorBoard(log_dir='logs/{}'.format(time()))
+tensorboard = TensorBoard(log_dir=LOG_DIR, histogram_freq=1)
 model.fit(x=X, y=Y, epochs=3, validation_split=0.1, callbacks=[tensorboard])
 
+exit()
+
 # Evaluate the model
+print('Playing...')
 players = [Player(i, keras_evaluator(model, i)) for i in [1,2,3,4]]
 game = play_game(*players)
 

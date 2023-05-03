@@ -97,17 +97,12 @@ def random_move(b, player):
     # hack for performance (see corresponding hack in has_valid_move)
     if b._next_move:
         return b._next_move
-    for move in valid_moves(b, player):
+    for move in valid_moves(b, player, True):
         return move
 
-
 def uniformly_random_move(b, player):
-    choice = None
-    for i, move in enumerate(valid_moves(b, player)):
-        if random() < (1 / (i + 1)):
-            choice = move
-    return choice
-
+    for move in valid_moves(b, player, True):
+        return move
 
 def get_next_player(b, player):
     for i in range(PLAYERS - 1):

@@ -1,6 +1,6 @@
 import numpy as np
 from game.game import flat_mask
-from game.board import Cell, valid_moves, place_cells
+from game.board import Cell, uniformly_random_move, place_cells
 
 def keras_evaluator(model, player):
     cells = None
@@ -11,7 +11,7 @@ def keras_evaluator(model, player):
             turn = len(board.ominos_remaining[player])
             cells = [Cell(*c) for c in board.cells]
         place_cells(cells, player, *move)
-        predictions = model.predict(np.array([flat_mask(cells)]))
+        predictions = model.predict(np.array([flat_mask(cells)]), verbose=0)
         return predictions[0][player - 1]
     return f
 
@@ -26,11 +26,17 @@ class Player:
         if b.next_player != self._player_idx:
             raise 'Not my turn'
         best_score = 0
-        move = None
-        for move in valid_moves(b, self._player_idx):
+        chosen_move = None
+        # for move in valid_moves(b, self._player_idx):
+        moves = [uniformly_random_move(b, self._player_idx) for _ in range(100)]
+        print(moves)
+
+        for move in moves:
             score = self._evaluator(b, move)
-            if score > best_score:
-                move = move
+            print(score)
+            if score >= best_score:
+                chosen_move = move
                 best_score = score
-        return (self._player_idx, ) + move
+
+        return (self._player_idx, ) + chosen_move
 
